@@ -32,3 +32,5 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+GitHubDesktop-linux-2.9.3-linux3.deb

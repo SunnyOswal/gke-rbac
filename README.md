@@ -69,4 +69,6 @@ Error from server (Forbidden): pods is forbidden: User "XXXX@gmail.com" cannot c
 terraform destroy
 Plan: 0 to add, 0 to change, 22 to destroy.
 
+gcloud container clusters delete gke-rbac --zone ${GKE_ZONE}
+
 ```

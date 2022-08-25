@@ -12,7 +12,7 @@ resource "google_project_iam_binding" "iam-binding" {
   project = var.gcp_project_id
   role    = google_project_iam_custom_role.iam-role.id
 
-  members = formatlist("user:%s", flatten([ for x in var.teams_config: x.users ]))
+  members = formatlist("user:%s", flatten([[ for x in var.teams_config: x.users_admin ],[ for x in var.teams_config: x.users_developer ]]))
 }
 
 resource "kubernetes_namespace" "namespace" {
@@ -22,10 +22,10 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-resource "kubernetes_role" "role" {
+resource "kubernetes_role" "admin-role" {
   for_each = { for x in var.teams_config: x.name => x }
   metadata {
-    name = each.value.name
+    name = join("",[each.value.name, "-admin"])
     }
 
   rule {
@@ -35,7 +35,7 @@ resource "kubernetes_role" "role" {
   }
 }
 
-resource "kubernetes_role_binding" "role-binding" {
+resource "kubernetes_role_binding" "admin-role-binding" {
   for_each = { for x in var.teams_config: x.name => x }
   metadata {
     name      = each.value.name
@@ -44,10 +44,10 @@ resource "kubernetes_role_binding" "role-binding" {
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "Role"
-    name      = each.value.name
+    name      = join("",[each.value.name, "-admin"])
   }
   dynamic "subject" {
-    for_each = each.value.users
+    for_each = each.value.users_admin
     content {
       kind      = "User"
       name      = subject.value
@@ -56,7 +56,7 @@ resource "kubernetes_role_binding" "role-binding" {
   }
 
   depends_on = [
-    kubernetes_role.role
+    kubernetes_role.admin-role
   ]
 }
 
@@ -78,4 +78,34 @@ resource "kubernetes_resource_quota" "quota" {
       }
     }
   }
+}
+
+resource "kubernetes_manifest" "developer-role" {
+  for_each = { for x in var.teams_config: x.name => x }
+  manifest = yamldecode(replace(file("${path.module}/developer.yaml"), "replacethis", join("",[each.value.name, "-developer"])))
+}
+
+resource "kubernetes_role_binding" "developer-role-binding" {
+  for_each = { for x in var.teams_config: x.name => x }
+  metadata {
+    name      = each.value.name
+    namespace = each.value.namespace
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = join("",[each.value.name, "-developer"])
+  }
+  dynamic "subject" {
+    for_each = each.value.users_developer
+    content {
+      kind      = "User"
+      name      = subject.value
+      api_group = "rbac.authorization.k8s.io"
+    }
+  }
+
+  depends_on = [
+    kubernetes_manifest.developer-role
+  ]
 }

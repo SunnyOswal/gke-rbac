@@ -1,0 +1,27 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: replacethis
+rules:
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - ''
+    resources:
+      - pods/attach
+      - pods/exec
+      - pods/proxy
+      - secrets
+  - verbs:
+      - create
+      - delete
+      - update
+    apiGroups:
+      - ''
+    resources:
+      - configmaps
+      - endpoints
+      - services

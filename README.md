@@ -38,13 +38,18 @@ gcloud container clusters get-credentials gke-rbac \
     --zone ${GKE_ZONE}
 ```
 
+## Developer Role yaml
++ Path: `gke-rbac/modules/rbac/developer.yaml`
++ Has a `replacethis` string which is `role` name and will be replaced by terraform at runtime with team specific role name.
++ Example: `team-a-developer` , `team-b-developer`
+
 ## Terraform (Update main.tf with gcp project id & existing users email)
 
 ```
 terraform init
 terraform apply
 
-Plan: 22 to add, 0 to change, 0 to destroy.
+Plan: 32 to add, 0 to change, 0 to destroy.
 
 ```
 ## Verify
@@ -67,7 +72,7 @@ Error from server (Forbidden): pods is forbidden: User "XXXX@gmail.com" cannot c
 ## Cleanup
 ```
 terraform destroy
-Plan: 0 to add, 0 to change, 22 to destroy.
+Plan: 0 to add, 0 to change, 32 to destroy.
 
 gcloud container clusters delete gke-rbac --zone ${GKE_ZONE}
 

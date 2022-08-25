@@ -81,12 +81,16 @@ resource "kubernetes_resource_quota" "quota" {
 }
 
 resource "kubernetes_manifest" "developer-role" {
-  for_each = { for x in var.teams_config: x.name => x }
+  for_each = {
+    for x in var.teams_config: x.name => x if length(x.users_developer) != 0
+  }
   manifest = yamldecode(replace(file("${path.module}/developer.yaml"), "replacethis", join("",[each.value.name, "-developer"])))
 }
 
 resource "kubernetes_role_binding" "developer-role-binding" {
-  for_each = { for x in var.teams_config: x.name => x }
+  for_each = {
+    for x in var.teams_config: x.name => x if length(x.users_developer) != 0
+  }
   metadata {
     name      = each.value.name
     namespace = each.value.namespace
